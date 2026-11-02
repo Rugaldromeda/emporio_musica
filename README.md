@@ -92,7 +92,7 @@ O projeto foi construído para ser um MVP robusto, mas existem pontos claros de 
    - **O que faria com mais tempo:** Implementaria persistência de sessão (utilizando Redis ou a própria tabela do Supabase) com um ID de sessão por usuário.
 4. **Avaliação de RAG (RAGAS):** Não foi implementado um pipeline formal de avaliação da qualidade das respostas.
    - **O que faria com mais tempo:** Usaria o framework RAGAS para calcular métricas como _Faithfulness_ (fidelidade ao contexto) e _Answer Relevance_ (relevância da resposta).
-5. **Prompt Caching** Atualmente, o system prompt é reenviado a cada requisição. Eu implementaria o Prompt Caching da OpenAI (ou usaria o cache nativo do LangChain) para reduzir custos e latência em conversas longas, como as mensagens nos testes são curtas não achei que seria interesante.
+5. **Prompt Caching** Atualmente, o system prompt é reenviado a cada requisição. Eu implementaria o Prompt Caching da OpenAI (ou usaria o cache nativo do LangChain) para reduzir custos e latência em conversas longas; como as sessões nos testes tiveram poucas trocas, o impacto no cenário atual seria pequeno.
 
 ---
 
