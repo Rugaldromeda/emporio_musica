@@ -4,14 +4,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# ---------- CONFIG ----------
 st.set_page_config(
     page_title="Emporio da Musica - Assistente",
     page_icon="🎵",
     layout="centered",
 )
 
-# ---------- ENV ----------
+
 dotenv_path = Path(__file__).parent / "creds" / ".env"
 load_dotenv(dotenv_path=dotenv_path)
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
@@ -22,28 +21,28 @@ SYSTEM_PROMPT = (
     "Ajude com dúvidas sobre instrumentos, partituras e serviços da loja."
 )
 
-# ---------- ESTADO ----------
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# ---------- HEADER ----------
+
 st.title("🎵 Emporio da Musica")
 st.caption("Assistente virtual — pergunte o que quiser!")
 
-# ---------- SIDEBAR ----------
+
 with st.sidebar:
     st.header("Opções")
     if st.button("🗑️ Limpar conversa", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
-# ---------- HISTÓRICO ----------
+
 for message in st.session_state.messages:
     avatar = "🧑" if message["role"] == "user" else "🎵"
     with st.chat_message(message["role"], avatar=avatar):
         st.markdown(message["content"])
 
-# ---------- INPUT ----------
+
 if prompt := st.chat_input("Digite sua pergunta..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="🧑"):
