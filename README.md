@@ -86,9 +86,6 @@ O projeto foi construído para ser um MVP robusto, mas existem pontos claros de 
 
    **Impacto:** O LLM consegue interpretar o texto corrido e responder corretamente sobre as políticas (como validado nos testes), mas perde a hierarquia visual das tabelas.
 
-   **O que faria com mais tempo:** Substituiria o `pypdf` pelo `PyMuPDF` (fitz) para extrair o texto com melhor preservação de layout. Para as tabelas, usaria a biblioteca `Unstructured` (com estratégia `hi_res`) ou o `Camelot` para extrair os dados tabulares e convertê-los em Markdown ou JSON estruturado antes de gerar os embeddings. Além disso, aumentaria o `chunk_size` para o equivalente a ~1000 tokens (cerca de 4000 caracteres), garantindo que a tabela inteira de pagamentos ficasse em um único chunk, melhorando a precisão do RAG.
-   A decisão de manter o pypdf e os chunks menores foi um trade-off consciente para priorizar a entrega funcional do MVP dentro do prazo, sem comprometer a capacidade do agente de responder às principais dúvidas dos clientes.
-
 2. **Edge Functions vs. RPC Direto:** Devido a um bug de infraestrutura no deploy da Edge Function de produtos, a busca de produtos foi movida para o SDK do Python via RPC direto no banco.
    - **O que faria com mais tempo:** Isolaria 100% da lógica de banco em Edge Functions (Deno/TypeScript) para que o frontend (Streamlit) ou um futuro app mobile não precisasse de uma chave secreta para acessar o banco.
 3. **Memória da Conversa:** A memória é volátil (`st.session_state`). Se o usuário fechar a aba ou o app reiniciar, o histórico se perde.
