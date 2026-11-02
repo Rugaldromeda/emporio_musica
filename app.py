@@ -24,7 +24,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 st.title("🎵 Emporio da Musica")
-st.caption("Assistente virtual — pergunte o que quiser!")
+st.caption("Olá! 👋 Sou o assistente do Emporio da Musica. Como posso ajudar?")
 
 # Sidebar
 with st.sidebar:
