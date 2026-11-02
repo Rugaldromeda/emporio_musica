@@ -1,5 +1,6 @@
 import os
 import json
+import streamlit as st
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -7,13 +8,20 @@ import requests
 from supabase import create_client, Client
 from langchain_core.tools import tool
 
-# Carrega credenciais
+# Tenta carregar o .env local (só funciona na sua máquina)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=PROJECT_ROOT / "creds" / ".env")
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+def get_secret(key):
+    
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.getenv(key)
+
+SUPABASE_URL = get_secret("SUPABASE_URL")
+SUPABASE_KEY = get_secret("SUPABASE_KEY")
+OPENAI_API_KEY = get_secret("OPENAI_API_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
