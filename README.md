@@ -2,6 +2,11 @@
 
 Este projeto é um agente de atendimento virtual construído em Python com Streamlit, utilizando LangChain e OpenAI para roteamento de ferramentas (Tool Calling), e Supabase (PostgreSQL + pgvector) como banco de dados.
 
+## 🌐 Aplicação Online
+
+Você pode testar o agente diretamente no navegador sem precisar instalar nada:
+👉 **[Acessar o Agente da Empório da Música](https://emporiomusica.streamlit.app)**
+
 ## 🚀 Como rodar o projeto
 
 ### Pré-requisitos
@@ -76,14 +81,21 @@ Para responder perguntas como "Qual o status do pedido 5?", o LLM precisa gerar 
 
 O projeto foi construído para ser um MVP robusto, mas existem pontos claros de melhoria:
 
-1. **Chunking de Políticas:** Atualmente, o PDF de políticas é "achatado" em texto pelo `pypdf` e dividido em chunks de 600 caracteres. Tabelas (como as de horários e formas de pagamento) perdem a formatação visual.
-   - **O que faria com mais tempo:** Usaria uma biblioteca como `Unstructured` ou `PyMuPDF` com estratégia de extração de tabelas (`hi_res`), transformando as tabelas em JSON estruturado ou Markdown antes de gerar os embeddings.
+1. **Chunking e Extração de Tabelas do PDF**
+   **O contexto:** O manual de políticas da loja é repleto de tabelas (formas de pagamento, horários, prazos de frete). O `pypdf` utilizado na ingestão extrai o texto de forma linear, "achatando" as tabelas em texto corrido. Além disso, para manter a compatibilidade com o ecossistema do LangChain no processamento inicial, configuramos o `RecursiveCharacterTextSplitter` com chunks de 600 caracteres para garantir que nenhuma linha de tabela fosse cortada ao meio, mantendo a integridade dos dados (mesmo que visualmente o texto pareça fragmentado).
+
+   **Impacto:** O LLM consegue interpretar o texto corrido e responder corretamente sobre as políticas (como validado nos testes), mas perde a hierarquia visual das tabelas.
+
+   **O que faria com mais tempo:** Substituiria o `pypdf` pelo `PyMuPDF` (fitz) para extrair o texto com melhor preservação de layout. Para as tabelas, usaria a biblioteca `Unstructured` (com estratégia `hi_res`) ou o `Camelot` para extrair os dados tabulares e convertê-los em Markdown ou JSON estruturado antes de gerar os embeddings. Além disso, aumentaria o `chunk_size` para o equivalente a ~1000 tokens (cerca de 4000 caracteres), garantindo que a tabela inteira de pagamentos ficasse em um único chunk, melhorando a precisão do RAG.
+   A decisão de manter o pypdf e os chunks menores foi um trade-off consciente para priorizar a entrega funcional do MVP dentro do prazo, sem comprometer a capacidade do agente de responder às principais dúvidas dos clientes.
+
 2. **Edge Functions vs. RPC Direto:** Devido a um bug de infraestrutura no deploy da Edge Function de produtos, a busca de produtos foi movida para o SDK do Python via RPC direto no banco.
    - **O que faria com mais tempo:** Isolaria 100% da lógica de banco em Edge Functions (Deno/TypeScript) para que o frontend (Streamlit) ou um futuro app mobile não precisasse de uma chave secreta para acessar o banco.
 3. **Memória da Conversa:** A memória é volátil (`st.session_state`). Se o usuário fechar a aba ou o app reiniciar, o histórico se perde.
    - **O que faria com mais tempo:** Implementaria persistência de sessão (utilizando Redis ou a própria tabela do Supabase) com um ID de sessão por usuário.
 4. **Avaliação de RAG (RAGAS):** Não foi implementado um pipeline formal de avaliação da qualidade das respostas.
    - **O que faria com mais tempo:** Usaria o framework RAGAS para calcular métricas como _Faithfulness_ (fidelidade ao contexto) e _Answer Relevance_ (relevância da resposta).
+5. **Prompt Caching** Atualmente, o system prompt é reenviado a cada requisição. Eu implementaria o Prompt Caching da OpenAI (ou usaria o cache nativo do LangChain) para reduzir custos e latência em conversas longas, como as mensagens nos testes são curtas não achei que seria interesante.
 
 ---
 
