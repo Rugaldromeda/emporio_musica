@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from pathlib import Path
 from dotenv import load_dotenv
+from langchain_core.messages import HumanMessage, AIMessage
 from agent.graph import criar_agente
 
 # Configuração da página
@@ -19,7 +20,7 @@ load_dotenv(dotenv_path=dotenv_path)
 if "agente" not in st.session_state:
     st.session_state.agente = criar_agente()
 
-# Inicializa o histórico
+# Inicializa o histórico de mensagens do Streamlit (para exibição)
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -33,7 +34,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# Renderiza o histórico
+# Renderiza o histórico visual
 for message in st.session_state.messages:
     avatar = "👤" if message["role"] == "user" else "🎵"
     with st.chat_message(message["role"], avatar=avatar):
@@ -41,31 +42,41 @@ for message in st.session_state.messages:
 
 # Input do chat
 if prompt := st.chat_input("Digite sua pergunta..."):
-    # Adiciona a mensagem do usuário
+    # Adiciona a mensagem do usuário ao histórico visual
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="🧑"):
+    with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
     # Chama o agente
     with st.chat_message("assistant", avatar="🎵"):
-        with st.spinner("Consultando o banco..."):
+        with st.spinner("Consultando..."):
             try:
-                # O LangChain precisa do histórico no formato (human, ai)
-                chat_history = []
-                for m in st.session_state.messages[:-1]: # Exclui a mensagem atual
-                    chat_history.append(("human" if m["role"] == "user" else "ai", m["content"]))
+                # 1. Converte o histórico visual para o formato de mensagens do LangChain
+                # A API nova espera uma lista de objetos HumanMessage e AIMessage
+                mensagens_langchain = []
                 
-                # Executa o agente
+                # Pega todo o histórico exceto a última mensagem (que já está no prompt)
+                for m in st.session_state.messages[:-1]:
+                    if m["role"] == "user":
+                        mensagens_langchain.append(HumanMessage(content=m["content"]))
+                    else:
+                        mensagens_langchain.append(AIMessage(content=m["content"]))
+                
+                # Adiciona a pergunta atual do usuário
+                mensagens_langchain.append(HumanMessage(content=prompt))
+                
+                # 2. Invoca o agente passando a lista de mensagens
                 resposta = st.session_state.agente.invoke({
-                    "input": prompt,
-                    "chat_history": chat_history
+                    "messages": mensagens_langchain
                 })
-                output = resposta["output"]
+                
+                # 3. A resposta final é a última mensagem na lista retornada
+                output = resposta["messages"][-1].content
                 st.markdown(output)
                 
             except Exception as e:
                 st.error(f"Erro: {e}")
                 output = "Desculpe, tive um problema. Tente novamente."
     
-    # Adiciona a resposta do agente ao histórico
+    # Adiciona a resposta do agente ao histórico visual
     st.session_state.messages.append({"role": "assistant", "content": output})
