@@ -24,7 +24,7 @@ if "agente" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-st.title("🎵 Emporio da Musica")
+st.title("🎵 Empório da Música")
 st.caption("Olá! 👋 Sou o assistente do Emporio da Musica. Como posso ajudar?")
 
 # Sidebar

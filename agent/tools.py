@@ -34,7 +34,7 @@ def buscar_produtos(query: str) -> str:
         result = supabase.rpc("hybrid_search_products", {
             "query_text": query,
             "query_embedding": embedding,
-            "match_count": 5
+            "match_count": 15
         }).execute()
 
         # 3. Retorna os dados
@@ -47,7 +47,7 @@ def buscar_produtos(query: str) -> str:
 
 @tool
 def buscar_politicas(query: str) -> str:
-    """Busca informações nas políticas da loja (horários, devoluções, formas de pagamento, garantias, frete). Use para dúvidas sobre regras e procedimentos."""
+    """Busca informações nas políticas da loja, regras de devolução, formas de pagamento, garantias, frete, horários de funcionamento, endereço e telefone. Use para dúvidas sobre regras, procedimentos e informações de contato."""
     try:
         # Usando requests em vez do SDK para evitar erros de autenticação
         url = f"{SUPABASE_URL}/functions/v1/hybrid_search_policies"
@@ -55,7 +55,7 @@ def buscar_politicas(query: str) -> str:
             "apikey": SUPABASE_KEY,
             "Content-Type": "application/json"
         }
-        payload = {"query": query, "limite": 3}
+        payload = {"query": query, "limite": 10}
         
         response = requests.post(url, headers=headers, json=payload)
         
