@@ -1,42 +1,42 @@
-# 🎸 Empório da Música - Agente de Atendimento AI
+# 🎸 Empório da Música - AI Customer Service Agent
 
-Este projeto é um agente de atendimento virtual construído em Python com Streamlit, utilizando LangChain e OpenAI para roteamento de ferramentas (Tool Calling), e Supabase (PostgreSQL + pgvector) como banco de dados.
+This project is a virtual customer service agent built in Python with Streamlit, using LangChain and OpenAI for tool routing (Tool Calling), and Supabase (PostgreSQL + pgvector) as the database.
 
-## 🌐 Aplicação Online
+## 🌐 Live Application
 
-Você pode testar o agente diretamente no navegador sem precisar instalar nada:
-👉 **[Acessar o Agente da Empório da Música](https://emporiomusica.streamlit.app)**
+You can try the agent directly in your browser, no installation needed:
+👉 **[Access the Empório da Música Agent](https://emporiomusica.streamlit.app)**
 
-## 🚀 Como rodar o projeto
+## 🚀 Running the project
 
-### Pré-requisitos
+### Prerequisites
 
 - Python 3.10+
-- Conta no Supabase
-- Chave de API da OpenAI
+- Supabase account
+- OpenAI API key
 
-### 1. Configuração do ambiente
+### 1. Environment setup
 
 ```bash
 git clone https://github.com/seu-usuario/emporio-da-musica.git
 cd emporio-da-musica
 python -m venv .venv
-source .venv/bin/activate  # ou .venv\Scripts\activate no Windows
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
 ```
 
-### 2. Variáveis de Ambiente
+### 2. Environment Variables
 
-Crie um arquivo `.env` na pasta `creds/` com:
+Create a `.env` file in the `creds/` folder with:
 
 ```env
-SUPABASE_URL="https://seu-projeto.supabase.co"
-SUPABASE_KEY="sua-chave-secreta-aqui"
-OPENAI_API_KEY="sua-chave-openai-aqui"
-DATABASE_URL="postgresql://..." # Apenas para os scripts de ETL
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_KEY="your-secret-key-here"
+OPENAI_API_KEY="your-openai-key-here"
+DATABASE_URL="postgresql://..." # Only for the ETL scripts
 ```
 
-### 3. Rodando o Agente
+### 3. Running the Agent
 
 ```bash
 streamlit run app.py
@@ -44,67 +44,67 @@ streamlit run app.py
 
 ---
 
-## 🧠 Decisões Técnicas e Justificativas
+## 🧠 Technical Decisions and Justifications
 
-### 1. Framework: LangChain (v1.x) e Streamlit
+### 1. Framework: LangChain (v1.x) and Streamlit
 
-- **Streamlit:** Escolhido pela agilidade na criação de interfaces de chat. Ele permite prototipar um frontend funcional em poucas linhas, sem a necessidade de construir um app React/Next.js complexo para uma prova de conceito.
-- **LangChain:** Utilizado pela abstração madura de **Tool Calling**. A versão moderna (`create_agent`) permite que o LLM decida dinamicamente qual ferramenta usar, mantendo a memória da conversa e o histórico de forma simples.
+- **Streamlit:** Chosen for the speed it offers in building chat interfaces. It allows prototyping a functional frontend in a few lines of code, without needing to build a complex React/Next.js app for a proof of concept.
+- **LangChain:** Used for its mature **Tool Calling** abstraction. The modern version (`create_agent`) lets the LLM dynamically decide which tool to use, while keeping conversation memory and history simple to manage.
 
 ### 2. LLM: `gpt-4o-mini`
 
-- **Justificativa:** É um modelo extremamente rápido, com um custo-benefício excelente para atendimento ao cliente. Ele possui uma janela de contexto grande o suficiente para as regras e o histórico, e a capacidade de _function calling_ (chamar ferramentas) é muito precisa para o nosso escopo.
+- **Justification:** It's an extremely fast model with excellent cost-benefit for customer service. It has a context window large enough for the rules and history, and its *function calling* capability is very precise for our scope.
 
-### 3. Arquitetura de Retrieval: RAG Híbrido
+### 3. Retrieval Architecture: Hybrid RAG
 
-Para a busca de produtos e políticas, não utilizamos apenas busca vetorial. Implementamos um **RAG Híbrido** diretamente no PostgreSQL:
+For product and policy search, we didn't rely on vector search alone. We implemented a **Hybrid RAG** directly in PostgreSQL:
 
-- **Busca Vetorial (`pgvector`):** Resolve o problema de vocabulário (ex: o cliente busca "instrumento de cordas macias" e encontra "violão de nylon").
-- **Full-Text Search (`tsvector`):** Garante que termos exatos não se percam (ex: "PIX", "12x", nomes de modelos como "Takamine GD20").
-- **RRF (Reciprocal Rank Fusion):** Utilizado para fundir os dois rankings no banco de dados. Isso garante que um produto que apareceu bem nas duas buscas (tanto textual quanto semântica) fique no topo, aumentando a precisão.
+- **Vector Search (`pgvector`):** Solves the vocabulary problem (e.g., a customer searches for "instrument with soft strings" and finds a "nylon-string guitar").
+- **Full-Text Search (`tsvector`):** Ensures exact terms aren't lost (e.g., "PIX", "12x" installments, model names like "Takamine GD20").
+- **RRF (Reciprocal Rank Fusion):** Used to merge the two rankings at the database level. This ensures a product that ranked well in both searches (textual and semantic) stays on top, increasing precision.
 
-### 4. Estratégia de Prompt (System Prompt)
+### 4. Prompt Strategy (System Prompt)
 
-O prompt foi desenhado com três pilares:
+The prompt was designed around three pillars:
 
-- **Persona:** Tom de voz amigável, prestativo e informal (como um músico conversando com outro).
-- **Guardrails (Limites):** Instruções claras para nunca inventar informações (alucinação). O agente é forçado a usar as ferramentas para responder sobre preços ou regras.
-- **Escopo:** O agente sabe recusar educadamente perguntas fora do escopo (ex: acessórios) e redirecionar o cliente.
+- **Persona:** A friendly, helpful, and informal tone of voice (like one musician talking to another).
+- **Guardrails:** Clear instructions to never make up information (hallucination). The agent is forced to use the tools to answer questions about prices or policies.
+- **Scope:** The agent politely declines out-of-scope questions (e.g., accessories) and redirects the customer.
 
-### 5. Consulta SQL Dinâmica com Segurança
+### 5. Secure Dynamic SQL Querying
 
-Para responder perguntas como "Qual o status do pedido 5?", o LLM precisa gerar SQL. Para evitar riscos de _SQL Injection_ ou comandos destrutivos, criamos uma função no Postgres (`executar_select_seguro`). Ela valida se a query começa com `SELECT` e bloqueia palavras como `DROP`, `DELETE` e `UPDATE` antes de executar via RPC.
-
----
-
-## ⚠️ Limitações Conhecidas e Melhorias Futuras
-
-O projeto foi construído para ser um MVP robusto, mas existem pontos claros de melhoria:
-
-1. **Chunking e Extração de Tabelas do PDF**
-   **O contexto:** O manual de políticas da loja é repleto de tabelas (formas de pagamento, horários, prazos de frete). O `pypdf` utilizado na ingestão extrai o texto de forma linear, "achatando" as tabelas em texto corrido. Além disso, para manter a compatibilidade com o ecossistema do LangChain no processamento inicial, configuramos o `RecursiveCharacterTextSplitter` com chunks de 600 caracteres para garantir que nenhuma linha de tabela fosse cortada ao meio, mantendo a integridade dos dados (mesmo que visualmente o texto pareça fragmentado).
-
-   **Impacto:** O LLM consegue interpretar o texto corrido e responder corretamente sobre as políticas (como validado nos testes), mas perde a hierarquia visual das tabelas.
-
-2. **Edge Functions vs. RPC Direto:** Devido a um bug de infraestrutura no deploy da Edge Function de produtos, a busca de produtos foi movida para o SDK do Python via RPC direto no banco.
-   - **O que faria com mais tempo:** Isolaria 100% da lógica de banco em Edge Functions (Deno/TypeScript) para que o frontend (Streamlit) ou um futuro app mobile não precisasse de uma chave secreta para acessar o banco.
-3. **Memória da Conversa:** A memória é volátil (`st.session_state`). Se o usuário fechar a aba ou o app reiniciar, o histórico se perde.
-   - **O que faria com mais tempo:** Implementaria persistência de sessão (utilizando Redis ou a própria tabela do Supabase) com um ID de sessão por usuário.
-4. **Avaliação de RAG (RAGAS):** Não foi implementado um pipeline formal de avaliação da qualidade das respostas.
-   - **O que faria com mais tempo:** Usaria o framework RAGAS para calcular métricas como _Faithfulness_ (fidelidade ao contexto) e _Answer Relevance_ (relevância da resposta).
-5. **Prompt Caching** Atualmente, o system prompt é reenviado a cada requisição. Eu implementaria o Prompt Caching da OpenAI (ou usaria o cache nativo do LangChain) para reduzir custos e latência em conversas longas; como as sessões nos testes tiveram poucas trocas, o impacto no cenário atual seria pequeno.
+To answer questions like "What's the status of order 5?", the LLM needs to generate SQL. To avoid SQL Injection risks or destructive commands, we created a Postgres function (`executar_select_seguro`). It validates that the query starts with `SELECT` and blocks keywords such as `DROP`, `DELETE`, and `UPDATE` before executing it via RPC.
 
 ---
 
-## 🤖 Uso de Assistentes de Código (AI Workflow)
+## ⚠️ Known Limitations and Future Improvements
 
-Em conformidade com o desafio, declaro que utilizei o assistente de IA **DeepSeek** (via chat) como um "par de programação" (pair programming). A ferramenta foi explorada de forma ativa e estratégica, não apenas para gerar código, mas para debater arquitetura:
+The project was built as a solid MVP, but there are clear areas for improvement:
 
-- **Aceleração de Boilerplate:** Geração rápida do DDL (Data Definition Language) do banco (criação de tabelas, chaves estrangeiras e índices HNSW para o pgvector) e scripts de ETL em massa.
-- **Debate de Arquitetura:** Discussão sobre os trade-offs entre usar Edge Functions vs. RPC direto, e a implementação do algoritmo RRF para busca híbrida.
-- **Debugging Complexo:** A IA foi fundamental para diagnosticar problemas de infraestrutura, como erros de conexão IPv6 com o Pooler do Supabase e a tipagem estrita do Postgres (erro `numeric` vs `float8` na função de busca).
-- **Refatoração:** Ajuda na migração da sintaxe antiga do LangChain (`AgentExecutor`) para a nova API (`create_agent`), mantendo o código limpo e modular.
+1. **PDF Chunking and Table Extraction**
+   **Context:** The store's policy manual is full of tables (payment methods, hours, shipping times). The `pypdf` library used for ingestion extracts text linearly, "flattening" tables into running text. Additionally, to maintain compatibility with the LangChain ecosystem during initial processing, we configured `RecursiveCharacterTextSplitter` with 600-character chunks to ensure no table row was cut in half, preserving data integrity (even if the text looks visually fragmented).
+
+   **Impact:** The LLM is able to interpret the running text and answer policy questions correctly (as validated in testing), but loses the visual hierarchy of the tables.
+
+2. **Edge Functions vs. Direct RPC:** Due to an infrastructure bug in the deployment of the products Edge Function, product search was moved to the Python SDK via direct RPC to the database.
+   - **What I would do with more time:** I would isolate 100% of the database logic in Edge Functions (Deno/TypeScript) so the frontend (Streamlit) or a future mobile app wouldn't need a secret key to access the database.
+3. **Conversation Memory:** Memory is volatile (`st.session_state`). If the user closes the tab or the app restarts, the history is lost.
+   - **What I would do with more time:** I would implement session persistence (using Redis or a Supabase table) with a per-user session ID.
+4. **RAG Evaluation (RAGAS):** A formal pipeline for evaluating response quality was not implemented.
+   - **What I would do with more time:** I would use the RAGAS framework to calculate metrics such as *Faithfulness* (fidelity to context) and *Answer Relevance*.
+5. **Prompt Caching:** Currently, the system prompt is resent with every request. I would implement OpenAI's Prompt Caching (or use LangChain's native cache) to reduce cost and latency; the gain grows with the length of the accumulated conversation history, and since the test sessions had few exchanges, the impact in the current scenario would be small.
 
 ---
 
-_Desenvolvido para o Desafio Técnico - AI Engineer (Artefact)._
+## 🤖 Use of AI Coding Assistants (AI Workflow)
+
+In compliance with the challenge requirements, I declare that I used the AI assistant **DeepSeek** (via chat) as a "pair programmer." The tool was used actively and strategically, not just to generate code but to discuss architecture:
+
+- **Boilerplate Acceleration:** Quick generation of the database DDL (Data Definition Language) (table creation, foreign keys, and HNSW indexes for pgvector) and bulk ETL scripts.
+- **Architecture Discussion:** Discussing the trade-offs between using Edge Functions vs. direct RPC, and the implementation of the RRF algorithm for hybrid search.
+- **Complex Debugging:** The AI was key to diagnosing infrastructure issues, such as IPv6 connection errors with the Supabase Pooler and strict Postgres typing (`numeric` vs `float8` error in the search function).
+- **Refactoring:** Help migrating the old LangChain syntax (`AgentExecutor`) to the new API (`create_agent`), keeping the code clean and modular.
+
+---
+
+_Developed for the Technical Challenge - AI Engineer (Artefact)._
